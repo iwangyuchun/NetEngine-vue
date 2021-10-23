@@ -8,11 +8,26 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent } from "vue";
+import store from "@/store";
+import { defineComponent, onMounted, watch } from "vue";
 export default defineComponent({
   name: "",
   props: {},
   setup() {
+    onMounted(()=>{
+      const mainContainerWidth=parseInt(document.getElementById("main-svg-container")?.getBoundingClientRect().width+'');
+      const mainContainerHeight=parseInt(document.getElementById("main-svg-container")?.getBoundingClientRect().height+'');
+      store.commit("updateSvgContainerDim",{ mainSvgContanerDim: { width: mainContainerWidth, height: mainContainerHeight } })
+    });
+    window.addEventListener("resize",()=>{
+      const mainContainerWidth=parseInt(document.getElementById("main-svg-container")?.getBoundingClientRect().width+'');
+      const mainContainerHeight=parseInt(document.getElementById("main-svg-container")?.getBoundingClientRect().height+'');
+      store.commit("updateSvgContainerDim",{ mainSvgContanerDim: { width: mainContainerWidth, height: mainContainerHeight } })
+    })
+    const render=()=>{
+      
+    }
+  
     return {};
   },
   

@@ -8,6 +8,8 @@
       >
         Data Source
       </button>
+      
+
       <div class="border rounded-1 p-2">
         <div class="form-check form-switch">
           <input
@@ -30,6 +32,7 @@
           >
         </div>
       </div>
+     
 
       <div class="border rounded-1 p-2">
         <div class="form-check">
@@ -101,7 +104,7 @@
             v-model="serverInfoVal.path.val"
           />
         </div>
-        <div class="d-grid gap-2">
+        <div class="d-grid gap-2 mt-2">
           <button
             class="btn btn-primary"
             type="button"
@@ -112,6 +115,7 @@
           </button>
         </div>
       </div>
+
     </div>
     <import-data-panel
       @close-import-panel="closePanel"
@@ -121,6 +125,7 @@
       @close-column-alter-panel="closeAlterColumnPanel"
       v-if="isColumnAlterVisible"
       :is-node-alter="isNodeAlterColumn"
+      :is-local="isLocalMode"
     ></column-alter-panel>
   </div>
 </template>
@@ -128,7 +133,7 @@
 import store from "@/store";
 import { computed, defineComponent, reactive, ref } from "vue";
 import ImportDataPanel from "../components/ImportDataPanel.vue";
-import ColumnAlterPanel from "../components/AttrAlterDialog.vue";
+import ColumnAlterPanel from "./AttrProjectionDialog.vue";
 export default defineComponent({
   name: "",
   props: {},
