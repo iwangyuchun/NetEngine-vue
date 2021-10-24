@@ -1,6 +1,7 @@
 import { createStore } from 'vuex'
 import * as mutations from "./mutations"
 import * as getters from "./getters"
+import LayoutManager from '@/layout'
 
 
 export interface InternalData {
@@ -85,6 +86,9 @@ export interface GlobalDataState {
       width:number,
       height:number
     }
+  },
+  manager:{
+    layoutManager:LayoutManager
   }
 }
 
@@ -163,6 +167,9 @@ export default createStore<GlobalDataState>({
         width:0,
         height:0
       }
+    },
+    manager:{
+      layoutManager:new LayoutManager(),
     }
 
   },

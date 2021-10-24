@@ -2,9 +2,10 @@
 // const mainSvgContainerHeight=
 
 import store from "@/store";
+import {mitter} from "../main"
 
 interface MapType{
-    [key:string]:Function
+    [key:string]:any
 }
 export default class LayoutManager{
     private mapType:MapType
@@ -23,6 +24,8 @@ export default class LayoutManager{
         nodes.forEach((node)=>{
             node.x=Math.random()*width;
             node.y=Math.random()*height;
-        })
+        });
+        store.commit("updateLayoutRes",{nodes})
+        mitter.emit("render")
     }
 }

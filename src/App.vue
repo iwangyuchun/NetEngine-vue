@@ -1,7 +1,7 @@
 <template>
   <div id="container">
     <global-header></global-header>
-    <div id="content-container" class="d-flex">
+    <div id="content-container" class="d-flex mt-2">
       <data-control-panel></data-control-panel>
       <div class="center-panel">
         <show-graph-panel></show-graph-panel>
@@ -13,6 +13,7 @@
 </template>
 <script>
 import "bootstrap/dist/css/bootstrap.min.css"
+
 import {defineComponent} from 'vue'
 import GlobalHeader from './components/GlobalHeader.vue'
 import DataControlPanel from './components/DataControlPanel.vue'

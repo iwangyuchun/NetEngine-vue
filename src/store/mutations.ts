@@ -1,4 +1,4 @@
-import { GlobalDataState, ServerInfo } from ".";
+import store, { GlobalDataState, ServerInfo } from ".";
 import { csv2json } from "@/helper/csv2json";
 
 
@@ -75,6 +75,7 @@ function constructNodeAlgorithmColumnMapping(state: GlobalDataState, rawData: { 
     state.dataImportControl.localSetting.algorithmColumnMapping.node.open = true;
     state.dataImportControl.localSetting.algorithmColumnMapping.node.oldToNew = oldToNew;
     state.dataImportControl.localSetting.algorithmColumnMapping.node.newToOld = newToOld;
+    useMappingToLayoutNodeData(state);
 }
 
 function constructLinkAlgorithmColumnMapping(state: GlobalDataState, rawData: { internalAttr: Array<string>, newAttr: Array<string> }) {
@@ -96,6 +97,7 @@ function constructLinkAlgorithmColumnMapping(state: GlobalDataState, rawData: { 
     state.dataImportControl.localSetting.algorithmColumnMapping.link.open = true;
     state.dataImportControl.localSetting.algorithmColumnMapping.link.oldToNew = oldToNew;
     state.dataImportControl.localSetting.algorithmColumnMapping.link.newToOld = newToOld;
+    useMappingToLayoutLinkData(state);
 }
 
 function closeNodeMapping(state: GlobalDataState) {
@@ -119,6 +121,76 @@ function updateSvgContainerDim(state: GlobalDataState, info: { mainSvgContanerDi
     state.svgContainer.mainContainer.height = info.mainSvgContanerDim.height;
 }
 
+function useMappingToLayoutNodeData(state: GlobalDataState) {
+    const {node:nodeColumnMapping}=state.dataImportControl.localSetting.algorithmColumnMapping;
+    if(nodeColumnMapping.open){
+        const nodes=state.internalDataInfo.nodes.map(node=>{
+            const newNode:{[key:string]:any}={};
+            for(const key of nodeColumnMapping.oldToNew.keys()){
+                newNode[key]=node[nodeColumnMapping.oldToNew.get(key)!]
+            }
+            return newNode;
+        });
+        state.layoutedData.nodes=nodes
+    }else{
+        state.layoutedData.nodes=state.internalDataInfo.nodes;
+    }
+}
+
+function useMappingToLayoutLinkData(state: GlobalDataState) {
+    const {link:linkColumnMapping}=state.dataImportControl.localSetting.algorithmColumnMapping;
+    if(linkColumnMapping.open){
+        const links=state.internalDataInfo.links.map(link=>{
+            const newLink:{[key:string]:any}={};
+            for(const key of linkColumnMapping.oldToNew.keys()){
+
+                newLink[key]=link[linkColumnMapping.oldToNew.get(key)!]
+            }
+            return newLink
+        });
+        state.layoutedData.links=links;
+    }else{
+        state.layoutedData.links=state.internalDataInfo.links;
+    }
+}
+
+function useMappingToLayoutedData(state: GlobalDataState) {
+    const {node:nodeColumnMapping,link:linkColumnMapping}=state.dataImportControl.localSetting.algorithmColumnMapping;
+    if(nodeColumnMapping.open){
+        const nodes=state.internalDataInfo.nodes.map(node=>{
+            const newNode:{[key:string]:any}={};
+            for(const key of nodeColumnMapping.oldToNew.keys()){
+                newNode[key]=node[nodeColumnMapping.oldToNew.get(key)!]
+            }
+            return newNode;
+        });
+        state.layoutedData.nodes=nodes
+    }else{
+        state.layoutedData.nodes=state.internalDataInfo.nodes;
+    }
+    if(linkColumnMapping.open){
+        const links=state.internalDataInfo.links.map(link=>{
+            const newLink:{[key:string]:any}={};
+            for(const key of linkColumnMapping.oldToNew.keys()){
+
+                newLink[key]=link[linkColumnMapping.oldToNew.get(key)!]
+            }
+            return newLink
+        });
+        state.layoutedData.links=links;
+    }else{
+        state.layoutedData.links=state.internalDataInfo.links;
+    }
+}
+
+function layout(state: GlobalDataState) {
+    state.manager.layoutManager.layout("random",state.layoutedData)
+}
+
+function updateLayoutRes(state: GlobalDataState,{nodes}:{nodes:any}) {
+    state.layoutedData.nodes=nodes;
+}
+
 
 
 export {
@@ -133,5 +205,8 @@ export {
     closeLinkMapping,
     constructNodeAlgorithmColumnMapping,
     constructLinkAlgorithmColumnMapping,
-    updateSvgContainerDim
+    updateSvgContainerDim,
+    useMappingToLayoutedData,
+    layout,
+    updateLayoutRes
 }

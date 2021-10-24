@@ -69,7 +69,7 @@
           <option value="2">Other</option>
         </select>
         <div class="d-grid gap-2 mt-2">
-          <button class="btn btn-primary" type="button">Layout</button>
+          <button class="btn btn-primary" type="button" @click="layout">Layout</button>
         </div>
       </div>
       <div class="border px-1 mt-2" v-if="!isLocalMode">
@@ -134,10 +134,14 @@ import store from "@/store";
 import { computed, defineComponent, reactive, ref } from "vue";
 import ImportDataPanel from "../components/ImportDataPanel.vue";
 import ColumnAlterPanel from "./AttrProjectionDialog.vue";
+
 export default defineComponent({
   name: "",
   props: {},
   components: { ImportDataPanel, ColumnAlterPanel },
+  methods:{
+    
+  },
   setup() {
     const isVisible = ref(false);
     const isColumnAlterVisible = ref(false);
@@ -219,6 +223,11 @@ export default defineComponent({
       store.commit("updateServerInfo", serverInfoVal);
     };
 
+    const layout=()=>{
+      
+      store.commit("layout")
+    }
+
     return {
       openImportPanel,
       closePanel,
@@ -233,6 +242,7 @@ export default defineComponent({
       nodeColumnMappingChange,
       linkColumnMappingChange,
       isNodeAlterColumn,
+      layout
     };
   },
 });
