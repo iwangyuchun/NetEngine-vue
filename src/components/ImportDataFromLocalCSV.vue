@@ -47,7 +47,7 @@ import store from "@/store";
 export default defineComponent({
   name: "",
   props: {},
-  emits:["finish-data-input"],
+  emits:["finish-data-input","close-input-panel"],
   setup(props,context) {
     const inputNodeFileVal=reactive({
       error:false,
@@ -127,7 +127,8 @@ export default defineComponent({
         return;
       }
       store.commit("convertRawToInternal");
-      context.emit("finish-data-input")
+      context.emit("finish-data-input");
+      context.emit("close-input-panel");
       
     }
     return {

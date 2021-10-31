@@ -29,3 +29,5 @@ export default class LayoutManager{
         mitter.emit("render")
     }
 }
+
+export const layoutAlgorithm=["random","force"];

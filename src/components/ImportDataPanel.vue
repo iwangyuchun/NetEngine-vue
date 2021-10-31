@@ -84,7 +84,7 @@
                 </button>
               </div>
               <div class="tab-content w-100" id="v-pills-tabContent">
-               <local-csv-component></local-csv-component>
+               <local-csv-component @close-input-panel="hide"></local-csv-component>
               </div>
             </div>
           </div>

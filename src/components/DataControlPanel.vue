@@ -8,31 +8,6 @@
       >
         Data Source
       </button>
-      
-
-      <div class="border rounded-1 p-2">
-        <div class="form-check form-switch">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            @change.prevent="nodeColumnMappingChange"
-          />
-          <label class="form-check-label" for="flexSwitchCheckChecked"
-            >Node Attr Projection</label
-          >
-        </div>
-        <div class="form-check form-switch">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            @change.prevent="linkColumnMappingChange"
-          />
-          <label class="form-check-label" for="flexSwitchCheckChecked"
-            >Link Attr Projection</label
-          >
-        </div>
-      </div>
-     
 
       <div class="border rounded-1 p-2">
         <div class="form-check">
@@ -61,15 +36,37 @@
           </label>
         </div>
       </div>
+      <div class="border rounded-1 p-2" v-if="isLocalMode">
+        <div class="form-check form-switch">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            @change.prevent="nodeColumnMappingChange"
+          />
+          <label class="form-check-label" for="flexSwitchCheckChecked"
+            >Node Attr Projection</label
+          >
+        </div>
+        <div class="form-check form-switch">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            @change.prevent="linkColumnMappingChange"
+          />
+          <label class="form-check-label" for="flexSwitchCheckChecked"
+            >Link Attr Projection</label
+          >
+        </div>
+      </div>
 
       <div class="local-layout-chose mt-2" v-if="isLocalMode">
-        <select class="form-select" aria-label="Default select example">
-          <option selected>Force</option>
-          <option value="1">Tree</option>
-          <option value="2">Other</option>
+        <select class="form-select" aria-label="Default select example" @change="layoutChange">
+          <option v-for="(item,ind) in allLayoutAlgorithm" :key="item" v-bind:checked="ind===0" :value="item">{{item}}</option>
         </select>
         <div class="d-grid gap-2 mt-2">
-          <button class="btn btn-primary" type="button" @click="layout">Layout</button>
+          <button class="btn btn-primary" type="button" @click="layout">
+            Layout
+          </button>
         </div>
       </div>
       <div class="border px-1 mt-2" v-if="!isLocalMode">
@@ -104,6 +101,39 @@
             v-model="serverInfoVal.path.val"
           />
         </div>
+        <div class="mb-1">
+          <label for="http_body_textareas" class="form-label">Http Body:</label>
+          <textarea
+            class="form-control"
+            id="http_body_textareas"
+            rows="6"
+            @blur="onHttpBodyBlur"
+          >
+{}</textarea
+          >
+        </div>
+        <div class="border rounded-1 p-2" v-if="!isLocalMode">
+          <div class="form-check form-switch">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              @change.prevent="modifyNodeColumnChange"
+            />
+            <label class="form-check-label" for="flexSwitchCheckChecked"
+              >Modify Node Column</label
+            >
+          </div>
+          <div class="form-check form-switch">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              @change.prevent="modfiyLinkColumnChange"
+            />
+            <label class="form-check-label" for="flexSwitchCheckChecked"
+              >Modify Link Column</label
+            >
+          </div>
+        </div>
         <div class="d-grid gap-2 mt-2">
           <button
             class="btn btn-primary"
@@ -115,7 +145,6 @@
           </button>
         </div>
       </div>
-
     </div>
     <import-data-panel
       @close-import-panel="closePanel"
@@ -127,6 +156,11 @@
       :is-node-alter="isNodeAlterColumn"
       :is-local="isLocalMode"
     ></column-alter-panel>
+    <modify-column-panel
+      @close-column-modify-panel="closeModifyColumnPanel"
+      v-if="isColumnMidifyVisible"
+      :is-node-alter="isNodeModifyColumn"
+    ></modify-column-panel>
   </div>
 </template>
 <script lang="ts">
@@ -134,18 +168,21 @@ import store from "@/store";
 import { computed, defineComponent, reactive, ref } from "vue";
 import ImportDataPanel from "../components/ImportDataPanel.vue";
 import ColumnAlterPanel from "./AttrProjectionDialog.vue";
+import ModifyColumnPanel from "./DataProjectionDialog.vue";
+//@ts-ignore
+import jsonFormat from "json-format";
 
 export default defineComponent({
   name: "",
   props: {},
-  components: { ImportDataPanel, ColumnAlterPanel },
-  methods:{
-    
-  },
+  components: { ImportDataPanel, ColumnAlterPanel, ModifyColumnPanel },
+  methods: {},
   setup() {
     const isVisible = ref(false);
     const isColumnAlterVisible = ref(false);
     const isNodeAlterColumn = ref(false);
+    const isNodeModifyColumn = ref(false);
+    const isColumnMidifyVisible = ref(false);
     const closePanel = () => {
       isVisible.value = !isVisible.value;
     };
@@ -158,10 +195,18 @@ export default defineComponent({
     const openAlterColumnPanel = () => {
       isColumnAlterVisible.value = true;
     };
+    const openModifyColumnPanel = () => {
+      isColumnMidifyVisible.value = true;
+    };
+    const closeModifyColumnPanel = () => {
+      isColumnMidifyVisible.value = !isColumnMidifyVisible.value;
+    };
     const hostValidInfo = reactive({
       error: false,
       msg: "",
     });
+
+    const allLayoutAlgorithm=reactive(store.state.dataImportControl.localSetting.allLocalAlgoritem);
 
     const nodeColumnMappingChange = (e: Event) => {
       const target = e.target as HTMLInputElement;
@@ -189,7 +234,36 @@ export default defineComponent({
       }
     };
 
-    const serverInfoVal = reactive(store.state.remoteServerInfo);
+    const modifyNodeColumnChange = (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      if (store.state.rawData.columName.nodeColumns.length <= 0) {
+        target.checked = !target.checked;
+        return;
+      }
+      if (target.checked) {
+        isNodeModifyColumn.value = true;
+        openModifyColumnPanel();
+      } else {
+      }
+    };
+
+    const modfiyLinkColumnChange = (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      if (store.state.rawData.columName.linkColumns.length <= 0) {
+        target.checked = !target.checked;
+        return;
+      }
+      if (target.checked) {
+        isNodeModifyColumn.value = false;
+        openModifyColumnPanel();
+      } else {
+      }
+    };
+
+    
+    const remoteSetting=store.state.dataImportControl.remoteSetting;
+    const serverInfoVal = reactive({host:{val:remoteSetting.remoteHost,isExist:true},path:{isExist:true,val:remoteSetting.remotePath},port:{val:remoteSetting.remotePort,isExist:true},params:{val:'{}',isExist:true}});
+
 
     const algorithmFromModeChange = (e: Event) => {
       const target = e.target as HTMLInputElement;
@@ -206,6 +280,21 @@ export default defineComponent({
         : false;
     });
 
+    const layoutChange=(e:Event)=>{
+      const target=e.target as HTMLSelectElement;
+      store.commit("updateLayout",target.value);
+
+    }
+
+    const onHttpBodyBlur = (e: Event) => {
+      const target = e.target as HTMLTextAreaElement;
+      // target.value=jsonFormat(target.value)
+      
+      serverInfoVal.params.val=target.value;
+    };
+
+
+
     const sendDataToSer = () => {
       if (serverInfoVal.host.val === "") {
         hostValidInfo.error = true;
@@ -220,13 +309,20 @@ export default defineComponent({
       if (serverInfoVal.path.val === "") {
         serverInfoVal.path.isExist = false;
       }
-      store.commit("updateServerInfo", serverInfoVal);
+      const tempObj:{[key:string]:any}={};
+      if(serverInfoVal.host.isExist){
+        tempObj["host"]=serverInfoVal.host.val;
+        tempObj["port"]=serverInfoVal.port.val;
+        tempObj["path"]=serverInfoVal.port.val;
+      }
+      tempObj["params"]=serverInfoVal.params.val;
+      store.commit("updateServerInfo", tempObj);
+      store.dispatch("sendData");
     };
 
-    const layout=()=>{
-      
-      store.commit("layout")
-    }
+    const layout = () => {
+      store.commit("layout");
+    };
 
     return {
       openImportPanel,
@@ -242,17 +338,41 @@ export default defineComponent({
       nodeColumnMappingChange,
       linkColumnMappingChange,
       isNodeAlterColumn,
-      layout
+      layout,
+      onHttpBodyBlur,
+      modifyNodeColumnChange,
+      modfiyLinkColumnChange,
+      isNodeModifyColumn,
+      closeModifyColumnPanel,
+      isColumnMidifyVisible,
+      allLayoutAlgorithm,
+      layoutChange
     };
   },
 });
 </script>
 <style scoped>
 .data-control-panel {
-  background-color: #f8f9fa;
+  /* background-color: #f8f9fa; */
   min-height: 500px;
   min-width: 350px;
   max-width: 350px;
-  flex-grow: 0.15;
 }
 </style>
+
+// {
+//   "name": "force",
+//   "params": {
+//     "electricalCharge": -1,
+//     "springStiffness": 1,
+//     "springLength": 1,
+//     "maxIterations": 50,
+//     "epsilonDistance": 50,
+//     "infinityDistance": 100,
+//     "nodeSpacing": 20,
+//     "viewSize": {
+//       "width": 1000,
+//       "height": 1000
+//     }
+//   }
+// }

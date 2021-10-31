@@ -74,15 +74,18 @@ export default defineComponent({
       // getScale()
       // render()
       console.log("maping")
+    });
+    watch(store.state.renderParams,(pre,cur)=>{
+      render();
     })
     const render = () => {
       getScale();
+      const renderParams=store.state.renderParams;
       let svg = d3.select("#main-svg-container").select("svg");
       if (svg) {
         svg.remove();
       }
       svg = d3.select("#main-svg-container").append("svg");
-      console.log(width,height)
       svg.attr("width", width).attr("height", height);
       const { nodes, links } = store.state.layoutedData;
       const linkG = svg.append("g");
@@ -92,7 +95,7 @@ export default defineComponent({
         return xScale(d.x)
       }).attr("cy",(d:any)=>{
         return yScale(d.y);
-      }).attr("r",4).attr("fill","steelblue")
+      }).attr("r",renderParams.nodeRadius).attr("fill",renderParams.nodeColor).attr("stroke",renderParams.borderColor).attr("stroke-width",renderParams.borderWidth)
     };
     mitter.on("render",render)
 

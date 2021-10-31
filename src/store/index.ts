@@ -1,7 +1,8 @@
 import { createStore } from 'vuex'
 import * as mutations from "./mutations"
+import * as actions from "./actions"
 import * as getters from "./getters"
-import LayoutManager from '@/layout'
+import LayoutManager,{layoutAlgorithm} from '@/layout'
 
 
 export interface InternalData {
@@ -73,10 +74,11 @@ export interface GlobalDataState {
     remoteSetting: {
       remoteHost: string,
       remotePort: number,
+      layoutParams:string,
+      remotePath:string
 
     }
   }
-  remoteServerInfo: ServerInfo,
   layoutedData: {
     nodes: Array<any>,
     links: Array<any>
@@ -89,8 +91,17 @@ export interface GlobalDataState {
   },
   manager:{
     layoutManager:LayoutManager
+  },
+  renderParams:{
+    nodeColor:string,
+    nodeRadius:number,
+    borderColor:string,
+    borderWidth:number
+    lineColor:string,
+    lineWidth:number
   }
 }
+
 
 export default createStore<GlobalDataState>({
   state: {
@@ -124,8 +135,8 @@ export default createStore<GlobalDataState>({
     dataImportControl: {
       algorithmMode: 'local',
       localSetting: {
-        allLocalAlgoritem: ['Force'],
-        selectedAlgoritem: 'Force',
+        allLocalAlgoritem: layoutAlgorithm,
+        selectedAlgoritem: layoutAlgorithm[0],
         algorithmColumnMapping: {
           node: {
             open: false,
@@ -141,21 +152,9 @@ export default createStore<GlobalDataState>({
       },
       remoteSetting: {
         remoteHost: '',
-        remotePort: 8080
-      }
-    },
-    remoteServerInfo: {
-      host: {
-        isExist: false,
-        val: 'http://localhost'
-      },
-      port: {
-        isExist: false,
-        val: 8080,
-      },
-      path: {
-        isExist: false,
-        val: ''
+        remotePort: 8080,
+        remotePath:'',
+        layoutParams:"{}"
       }
     },
     layoutedData: {
@@ -170,13 +169,21 @@ export default createStore<GlobalDataState>({
     },
     manager:{
       layoutManager:new LayoutManager(),
+    },
+    renderParams:{
+      nodeColor:"#547AA5",
+      nodeRadius:4,
+      borderWidth:0,
+      borderColor:"#EA8936",
+      lineColor:"#BEBEBE",
+      lineWidth:1,
     }
+
 
   },
   mutations,
   getters,
-  actions: {
-  },
+  actions,
   modules: {
   }
 })

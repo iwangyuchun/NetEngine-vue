@@ -112,8 +112,13 @@ function updateLayoutAlgoritemMode(state: GlobalDataState, mode: 'local' | 'remo
     state.dataImportControl.algorithmMode = mode
 }
 
-function updateServerInfo(state: GlobalDataState, info: ServerInfo) {
-    state.remoteServerInfo = info;
+function updateServerInfo(state: GlobalDataState, info: {host:string,port:number,path:string,params:string}) {
+    
+    state.dataImportControl.remoteSetting.remoteHost=info.host;
+    state.dataImportControl.remoteSetting.remotePort=info.port;
+    state.dataImportControl.remoteSetting.remotePath=info.path;
+    state.dataImportControl.remoteSetting.layoutParams=info.params;
+
 }
 
 function updateSvgContainerDim(state: GlobalDataState, info: { mainSvgContanerDim: { width: number, height: number } }) {
@@ -184,13 +189,38 @@ function useMappingToLayoutedData(state: GlobalDataState) {
 }
 
 function layout(state: GlobalDataState) {
-    state.manager.layoutManager.layout("random",state.layoutedData)
+    state.manager.layoutManager.layout(state.dataImportControl.localSetting.selectedAlgoritem,state.layoutedData)
 }
 
 function updateLayoutRes(state: GlobalDataState,{nodes}:{nodes:any}) {
     state.layoutedData.nodes=nodes;
 }
 
+function alterNodeColor(state:GlobalDataState,color:string) {
+    state.renderParams.nodeColor=color;
+}
+
+function alterNodeRadius(state:GlobalDataState,radius:number) {
+    state.renderParams.nodeRadius=radius;
+}
+function alterBorderColor(state:GlobalDataState,color:string) {
+    state.renderParams.borderColor=color;
+}
+
+function alterBorderWidth(state:GlobalDataState,width:number) {
+    state.renderParams.borderWidth=width;
+}
+
+function alterLineColor(state:GlobalDataState,color:string) {
+    state.renderParams.lineColor=color;
+}
+function alterLineWidth(state:GlobalDataState,width:number) {
+    state.renderParams.lineWidth=width;
+}
+
+function updateLayout(state:GlobalDataState,layout:string) {
+    state.dataImportControl.localSetting.selectedAlgoritem=layout;
+}
 
 
 export {
@@ -208,5 +238,13 @@ export {
     updateSvgContainerDim,
     useMappingToLayoutedData,
     layout,
-    updateLayoutRes
+    updateLayoutRes,
+    alterNodeColor,
+    alterNodeRadius,
+    alterBorderColor,
+    alterBorderWidth,
+    alterLineColor,
+    alterLineWidth,
+    updateLayout
+
 }

@@ -37,7 +37,7 @@ export default defineComponent({
 }
 .center-panel{
   
-  flex-grow:0.7
+  flex-grow:1
 }
 .right-side-panel{
   background-color: rgb(101, 38, 109);
