@@ -113,7 +113,6 @@ function updateLayoutAlgoritemMode(state: GlobalDataState, mode: 'local' | 'remo
 }
 
 function updateServerInfo(state: GlobalDataState, info: {host:string,port:number,path:string,params:string}) {
-    
     state.dataImportControl.remoteSetting.remoteHost=info.host;
     state.dataImportControl.remoteSetting.remotePort=info.port;
     state.dataImportControl.remoteSetting.remotePath=info.path;
@@ -128,35 +127,68 @@ function updateSvgContainerDim(state: GlobalDataState, info: { mainSvgContanerDi
 
 function useMappingToLayoutNodeData(state: GlobalDataState) {
     const {node:nodeColumnMapping}=state.dataImportControl.localSetting.algorithmColumnMapping;
-    if(nodeColumnMapping.open){
-        const nodes=state.internalDataInfo.nodes.map(node=>{
-            const newNode:{[key:string]:any}={};
-            for(const key of nodeColumnMapping.oldToNew.keys()){
-                newNode[key]=node[nodeColumnMapping.oldToNew.get(key)!]
-            }
-            return newNode;
-        });
-        state.layoutedData.nodes=nodes
+    if(state.dataImportControl.algorithmMode==='local'){
+        if(nodeColumnMapping.open){
+            const nodes=state.internalDataInfo.nodes.map(node=>{
+                const newNode:{[key:string]:any}={};
+                for(const key of nodeColumnMapping.oldToNew.keys()){
+                    newNode[key]=node[nodeColumnMapping.oldToNew.get(key)!]
+                }
+                return newNode;
+            });
+            state.layoutedData.nodes=nodes
+        }else{
+            state.layoutedData.nodes=state.internalDataInfo.nodes;
+        }
     }else{
-        state.layoutedData.nodes=state.internalDataInfo.nodes;
+        if(nodeColumnMapping.open){
+            const nodes=state.receiveData.nodes.map(node=>{
+                const newNode:{[key:string]:any}={};
+                for(const key of nodeColumnMapping.oldToNew.keys()){
+                    newNode[key]=node[nodeColumnMapping.oldToNew.get(key)!]
+                }
+                return newNode;
+            });
+            state.layoutedData.nodes=nodes
+        }else{
+            state.layoutedData.nodes=state.receiveData.nodes;
+        }
     }
+    
 }
 
 function useMappingToLayoutLinkData(state: GlobalDataState) {
     const {link:linkColumnMapping}=state.dataImportControl.localSetting.algorithmColumnMapping;
-    if(linkColumnMapping.open){
-        const links=state.internalDataInfo.links.map(link=>{
-            const newLink:{[key:string]:any}={};
-            for(const key of linkColumnMapping.oldToNew.keys()){
-
-                newLink[key]=link[linkColumnMapping.oldToNew.get(key)!]
-            }
-            return newLink
-        });
-        state.layoutedData.links=links;
+    if(state.dataImportControl.algorithmMode==='local'){
+        if(linkColumnMapping.open){
+            const links=state.internalDataInfo.links.map(link=>{
+                const newLink:{[key:string]:any}={};
+                for(const key of linkColumnMapping.oldToNew.keys()){
+    
+                    newLink[key]=link[linkColumnMapping.oldToNew.get(key)!]
+                }
+                return newLink
+            });
+            state.layoutedData.links=links;
+        }else{
+            state.layoutedData.links=state.internalDataInfo.links;
+        }
     }else{
-        state.layoutedData.links=state.internalDataInfo.links;
+        if(linkColumnMapping.open){
+            const links=state.receiveData.links.map(link=>{
+                const newLink:{[key:string]:any}={};
+                for(const key of linkColumnMapping.oldToNew.keys()){
+    
+                    newLink[key]=link[linkColumnMapping.oldToNew.get(key)!]
+                }
+                return newLink
+            });
+            state.layoutedData.links=links;
+        }else{
+            state.layoutedData.links=state.receiveData.links;
+        }
     }
+    
 }
 
 function useMappingToLayoutedData(state: GlobalDataState) {
@@ -222,6 +254,52 @@ function updateLayout(state:GlobalDataState,layout:string) {
     state.dataImportControl.localSetting.selectedAlgoritem=layout;
 }
 
+function analyReceiveDataColumn(nodes:Array<any>,links:Array<any>) {
+    let nodeColumn:Array<string>=[];
+    let linkColumn:Array<string>=[];
+    if(nodes.length>0){
+        nodeColumn=Object.keys(nodes[0]);
+    }
+    if(links.length>0){
+        linkColumn=Object.keys(links[0]);
+    }
+    return {
+        nodeColumn:nodeColumn,
+        linkColumn:linkColumn,
+    }
+}
+
+function updateReceiveData(state:GlobalDataState,data:{nodes:Array<any>,links:Array<any>}|null) {
+    if(data){
+        
+        state.receiveData.nodes=data.nodes;
+        state.receiveData.links=data.links;
+        state.receiveData.hasData=true;
+        const columnName=analyReceiveDataColumn(data.nodes,data.links);
+        state.receiveData.columnName.nodeColumn=columnName.nodeColumn;
+        state.receiveData.columnName.linkColumn=columnName.linkColumn;
+    }
+}
+
+function saveSetting(state:GlobalDataState) {
+    if(state.rawData.columnMapping.node.open){
+        localStorage.setItem("rowData.ColumnMapping.node",JSON.stringify(map2Obj(state.rawData.columnMapping.node.oldToNew)));
+    }
+    if(state.rawData.columnMapping.link.open){
+        localStorage.setItem("rowData.ColumnMapping.link",JSON.stringify(map2Obj(state.rawData.columnMapping.link.oldToNew)));
+    }
+    if(state.dataImportControl.localSetting.algorithmColumnMapping.node.open){
+        localStorage.setItem("dataImportControl.localSetting.algorithmColumnMapping.node",JSON.stringify(map2Obj(state.dataImportControl.localSetting.algorithmColumnMapping.node.oldToNew)));
+    }
+    if(state.dataImportControl.localSetting.algorithmColumnMapping.link.open){
+        localStorage.setItem("dataImportControl.localSetting.algorithmColumnMapping.node",JSON.stringify(map2Obj(state.dataImportControl.localSetting.algorithmColumnMapping.node.oldToNew)));
+    }
+    if(state.dataImportControl.algorithmMode==='remote'){
+        localStorage.setItem("dataImportControl.remoteSetting",JSON.stringify(state.dataImportControl.remoteSetting));
+    }
+    localStorage.setItem("renderParams",JSON.stringify(state.renderParams));
+    // if(state.dataImportControl)
+}
 
 export {
     updateRawNodeDataCSV,
@@ -245,6 +323,6 @@ export {
     alterBorderWidth,
     alterLineColor,
     alterLineWidth,
-    updateLayout
-
+    updateLayout,
+    updateReceiveData,
 }

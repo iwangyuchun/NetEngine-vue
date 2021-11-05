@@ -6,7 +6,7 @@ import { layout } from "./mutations";
 
 async function post(url: string, payload: any) {
     const { data } = await axios.post(url, payload);
-    return true;
+    return data;
 }
 
 function  combinePayload(state:GlobalDataState,data:{nodes:Array<any>,links:Array<any>}) {
@@ -54,7 +54,13 @@ const sendData: ActionHandler<GlobalDataState, GlobalDataState> = (context: Acti
     }
     const url=generateRemoteUrl(context.state);
     const payload=combinePayload(context.state,formatData);
-    post(url,payload);
+    
+    post(url,payload).then((res)=>{
+        context.commit("updateReceiveData",res);
+    })
+    
+    
+    
 }
 
 export {sendData}

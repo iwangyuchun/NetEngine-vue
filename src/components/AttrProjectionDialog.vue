@@ -114,19 +114,26 @@ export default defineComponent({
     useDomCreate("column_alter");
    
     let internalAttr;
-    if (props.isNodeAlter) {
+    if (props.isNodeAlter&&props.isLocal) {
       internalAttr = reactive(["id"]);
-    } else {
+    } else if(!props.isNodeAlter&&props.isLocal){
       internalAttr = reactive(["source", "target"]);
+    }else if(props.isNodeAlter&&!props.isLocal){
+      internalAttr=reactive(["id","x","y"]);
+    }else if(!props.isNodeAlter&&!props.isLocal){
+      internalAttr=reactive(["source","target"]);
     }
     const originColumns = computed(() => {
       if (props.isNodeAlter&&props.isLocal) {
         return store.state.rawData.columName.nodeColumns;
       } else if(!props.isNodeAlter&&props.isLocal){
         return store.state.rawData.columName.linkColumns;
-      }else{
-        return null;
+      }else if(props.isNodeAlter&&!props.isLocal){
+        return store.state.receiveData.columnName.nodeColumn;
+      }else if(!props.isNodeAlter&&!props.isLocal){
+        return store.state.receiveData.columnName.linkColumn;
       }
+      return null
     });
 
 
@@ -143,9 +150,9 @@ export default defineComponent({
          //@ts-ignore
          newAttrArray.push(selectEl.value);
        }
-       if(props.isNodeAlter&&props.isLocal){
+       if(props.isNodeAlter){
           store.commit("constructNodeAlgorithmColumnMapping",{internalAttr:oldAttrArray,newAttr:newAttrArray});
-       }else if(!props.isNodeAlter&&props.isLocal){
+       }else if(!props.isNodeAlter){
           store.commit("constructLinkAlgorithmColumnMapping",{internalAttr:oldAttrArray,newAttr:newAttrArray});
        }
       context.emit("close-column-alter-panel");

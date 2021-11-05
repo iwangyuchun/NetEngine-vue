@@ -82,6 +82,15 @@ export interface GlobalDataState {
   layoutedData: {
     nodes: Array<any>,
     links: Array<any>
+  },
+  receiveData:{
+    hasData:boolean,
+    columnName:{
+      nodeColumn:Array<string>,
+      linkColumn:Array<string>
+    }
+    nodes:Array<any>,
+    links:Array<any>
   }
   svgContainer:{
     mainContainer:{
@@ -151,11 +160,20 @@ export default createStore<GlobalDataState>({
         }
       },
       remoteSetting: {
-        remoteHost: '',
+        remoteHost: 'http://localhost',
         remotePort: 8080,
         remotePath:'',
         layoutParams:"{}"
       }
+    },
+    receiveData:{
+      hasData:false,
+      columnName:{
+        linkColumn:[],
+        nodeColumn:[],
+      },
+      nodes:[],
+      links:[],
     },
     layoutedData: {
       nodes: [],

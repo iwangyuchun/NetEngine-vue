@@ -60,8 +60,19 @@
       </div>
 
       <div class="local-layout-chose mt-2" v-if="isLocalMode">
-        <select class="form-select" aria-label="Default select example" @change="layoutChange">
-          <option v-for="(item,ind) in allLayoutAlgorithm" :key="item" v-bind:checked="ind===0" :value="item">{{item}}</option>
+        <select
+          class="form-select"
+          aria-label="Default select example"
+          @change="layoutChange"
+        >
+          <option
+            v-for="(item, ind) in allLayoutAlgorithm"
+            :key="item"
+            v-bind:checked="ind === 0"
+            :value="item"
+          >
+            {{ item }}
+          </option>
         </select>
         <div class="d-grid gap-2 mt-2">
           <button class="btn btn-primary" type="button" @click="layout">
@@ -80,6 +91,7 @@
             placeholder="input server host"
             v-model="serverInfoVal.host.val"
           />
+          <span class="invalid-feedback">fdshhfksjd</span>
         </div>
         <div class="mb-3">
           <label for="exampleFormControlInput1" class="form-label"
@@ -138,11 +150,38 @@
           <button
             class="btn btn-primary"
             type="button"
-            :disabled="serverInfoVal.host.isExist"
+            :disabled="!serverInfoVal.host.isExist"
             @click.prevent="sendDataToSer"
           >
             Send
           </button>
+        </div>
+        <div class="border rounded-1 p-2" v-if="hasReceivedData">
+          <div class="form-check form-switch">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              @change.prevent="nodeColumnMappingChange"
+            />
+            <label class="form-check-label" for="flexSwitchCheckChecked"
+              >Node Attr Projection</label
+            >
+          </div>
+          <div class="form-check form-switch">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              @change.prevent="linkColumnMappingChange"
+            />
+            <label class="form-check-label" for="flexSwitchCheckChecked"
+              >Link Attr Projection</label
+            >
+          </div>
+          <div class="d-grid gap-2 mt-2" v-if="hasReceivedData">
+            <button class="btn btn-primary" type="button" @click="layoutRemote">
+              Layout
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -165,10 +204,11 @@
 </template>
 <script lang="ts">
 import store from "@/store";
-import { computed, defineComponent, reactive, ref } from "vue";
+import { computed, defineComponent, reactive, ref, render, watch } from "vue";
 import ImportDataPanel from "../components/ImportDataPanel.vue";
 import ColumnAlterPanel from "./AttrProjectionDialog.vue";
 import ModifyColumnPanel from "./DataProjectionDialog.vue";
+import { mitter } from "../main";
 //@ts-ignore
 import jsonFormat from "json-format";
 
@@ -183,6 +223,8 @@ export default defineComponent({
     const isNodeAlterColumn = ref(false);
     const isNodeModifyColumn = ref(false);
     const isColumnMidifyVisible = ref(false);
+    const hasReceivedData = computed(() => store.state.receiveData.hasData);
+
     const closePanel = () => {
       isVisible.value = !isVisible.value;
     };
@@ -206,11 +248,16 @@ export default defineComponent({
       msg: "",
     });
 
-    const allLayoutAlgorithm=reactive(store.state.dataImportControl.localSetting.allLocalAlgoritem);
+    const allLayoutAlgorithm = reactive(
+      store.state.dataImportControl.localSetting.allLocalAlgoritem
+    );
 
     const nodeColumnMappingChange = (e: Event) => {
       const target = e.target as HTMLInputElement;
-      if (store.state.rawData.columName.nodeColumns.length <= 0) {
+      if (
+        store.state.rawData.columName.nodeColumns.length <= 0 &&
+        !store.state.receiveData.hasData
+      ) {
         target.checked = !target.checked;
         return;
       }
@@ -222,7 +269,10 @@ export default defineComponent({
     };
     const linkColumnMappingChange = (e: Event) => {
       const target = e.target as HTMLInputElement;
-      if (store.state.rawData.columName.linkColumns.length <= 0) {
+      if (
+        store.state.rawData.columName.linkColumns.length <= 0 &&
+        !store.state.receiveData.hasData
+      ) {
         target.checked = !target.checked;
         return;
       }
@@ -260,10 +310,13 @@ export default defineComponent({
       }
     };
 
-    
-    const remoteSetting=store.state.dataImportControl.remoteSetting;
-    const serverInfoVal = reactive({host:{val:remoteSetting.remoteHost,isExist:true},path:{isExist:true,val:remoteSetting.remotePath},port:{val:remoteSetting.remotePort,isExist:true},params:{val:'{}',isExist:true}});
-
+    const remoteSetting = store.state.dataImportControl.remoteSetting;
+    const serverInfoVal = reactive({
+      host: { val: remoteSetting.remoteHost, isExist: true },
+      path: { isExist: true, val: remoteSetting.remotePath },
+      port: { val: remoteSetting.remotePort, isExist: true },
+      params: { val: "{}", isExist: true },
+    });
 
     const algorithmFromModeChange = (e: Event) => {
       const target = e.target as HTMLInputElement;
@@ -280,20 +333,17 @@ export default defineComponent({
         : false;
     });
 
-    const layoutChange=(e:Event)=>{
-      const target=e.target as HTMLSelectElement;
-      store.commit("updateLayout",target.value);
-
-    }
+    const layoutChange = (e: Event) => {
+      const target = e.target as HTMLSelectElement;
+      store.commit("updateLayout", target.value);
+    };
 
     const onHttpBodyBlur = (e: Event) => {
       const target = e.target as HTMLTextAreaElement;
       // target.value=jsonFormat(target.value)
-      
-      serverInfoVal.params.val=target.value;
+
+      serverInfoVal.params.val = target.value;
     };
-
-
 
     const sendDataToSer = () => {
       if (serverInfoVal.host.val === "") {
@@ -309,19 +359,24 @@ export default defineComponent({
       if (serverInfoVal.path.val === "") {
         serverInfoVal.path.isExist = false;
       }
-      const tempObj:{[key:string]:any}={};
-      if(serverInfoVal.host.isExist){
-        tempObj["host"]=serverInfoVal.host.val;
-        tempObj["port"]=serverInfoVal.port.val;
-        tempObj["path"]=serverInfoVal.port.val;
+      const tempObj: { [key: string]: any } = {};
+      if (serverInfoVal.host.isExist) {
+        tempObj["host"] = serverInfoVal.host.val;
+        tempObj["port"] = serverInfoVal.port.val;
+        tempObj["path"] = serverInfoVal.path.val;
       }
-      tempObj["params"]=serverInfoVal.params.val;
+      tempObj["params"] = serverInfoVal.params.val;
+      console.log(tempObj);
       store.commit("updateServerInfo", tempObj);
       store.dispatch("sendData");
     };
 
     const layout = () => {
       store.commit("layout");
+    };
+
+    const layoutRemote = () => {
+      mitter.emit("render");
     };
 
     return {
@@ -346,7 +401,10 @@ export default defineComponent({
       closeModifyColumnPanel,
       isColumnMidifyVisible,
       allLayoutAlgorithm,
-      layoutChange
+      layoutChange,
+      hostValidInfo,
+      hasReceivedData,
+      layoutRemote,
     };
   },
 });
